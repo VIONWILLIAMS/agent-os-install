@@ -8,6 +8,7 @@
 - Bun
 - `@vionwilliams/agent-os`
 - 终端 PATH 配置
+- npm 专用缓存目录，避开旧 npm/sudo 造成的 `~/.npm` 权限问题
 - 安装后的版本验证
 
 ## 最懒人安装
@@ -65,4 +66,23 @@ agent-os --version
 - 这个安装器只支持 macOS。
 - Agent-OS CLI 本体来自 npm 包：`@vionwilliams/agent-os`。
 - 用户不需要 clone Agent-OS 源码仓库。
-- 如果安装过程中提示输入电脑密码，通常是 npm 全局安装需要权限。
+- 安装器默认使用 `~/.agent-os/npm-cache` 作为 npm 缓存，不依赖 `~/.npm`。
+
+## 常见问题
+
+### npm 报 EACCES / root-owned cache
+
+如果你看到类似错误：
+
+```text
+Your cache folder contains root-owned files
+path /Users/xxx/.npm/_cacache
+```
+
+请重新下载并运行最新版安装脚本。新版脚本会自动使用 Agent-OS 专用 npm 缓存：
+
+```text
+~/.agent-os/npm-cache
+```
+
+不需要手动修改 `~/.npm`。

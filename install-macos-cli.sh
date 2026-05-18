@@ -4,6 +4,7 @@ set -euo pipefail
 PACKAGE_SPEC="${AGENT_OS_PACKAGE_SPEC:-@vionwilliams/agent-os@latest}"
 MIN_NODE_MAJOR="${AGENT_OS_MIN_NODE_MAJOR:-20}"
 MIN_BUN_VERSION="${AGENT_OS_MIN_BUN_VERSION:-1.3.0}"
+NPM_CACHE_DIR="${AGENT_OS_NPM_CACHE:-${HOME}/.agent-os/npm-cache}"
 
 log() {
   printf '\033[1;34m[agent-os]\033[0m %s\n' "$*"
@@ -32,6 +33,8 @@ Environment variables:
                           Default: ${MIN_NODE_MAJOR}
   AGENT_OS_MIN_BUN_VERSION Minimum Bun version.
                           Default: ${MIN_BUN_VERSION}
+  AGENT_OS_NPM_CACHE      npm cache directory used by this installer.
+                          Default: ${NPM_CACHE_DIR}
 EOF
 }
 
@@ -175,7 +178,15 @@ ensure_npm_global_bin() {
   append_profile_line "export PATH=\"${bin}:\$PATH\""
 }
 
+ensure_npm_cache() {
+  mkdir -p "${NPM_CACHE_DIR}" || fail "Unable to create npm cache directory: ${NPM_CACHE_DIR}"
+  export NPM_CONFIG_CACHE="${NPM_CACHE_DIR}"
+  export npm_config_cache="${NPM_CACHE_DIR}"
+  log "Using npm cache: ${NPM_CACHE_DIR}"
+}
+
 install_agent_os() {
+  ensure_npm_cache
   ensure_npm_global_bin
 
   log "Installing Agent-OS CLI from npm: ${PACKAGE_SPEC}"
