@@ -6,9 +6,6 @@ MIN_NODE_MAJOR="${AGENT_OS_MIN_NODE_MAJOR:-20}"
 MIN_BUN_VERSION="${AGENT_OS_MIN_BUN_VERSION:-1.3.14}"
 NPM_CACHE_DIR="${AGENT_OS_NPM_CACHE:-${HOME}/.agent-os/npm-cache}"
 SHORTCUT_BIN_DIR="${AGENT_OS_SHORTCUT_BIN:-${HOME}/.agent-os/bin}"
-AGENT_OS_CONFIG_HOME="${AGENT_OS_CONFIG_DIR:-${HOME}/.agent-os}"
-ROUTER_CONFIG_PATH="${AGENT_OS_CONFIG_HOME}/model-router.json"
-PROVIDER_READY=0
 
 log() {
   printf '\033[1;34m[agent-os]\033[0m %s\n' "$*"
@@ -41,8 +38,6 @@ Environment variables:
                           Default: ${NPM_CACHE_DIR}
   AGENT_OS_SHORTCUT_BIN   Directory for Agent-OS convenience commands.
                           Default: ${SHORTCUT_BIN_DIR}
-  AGENT_OS_PROVIDER_API_KEY
-                          Optional DeepSeek API key for non-interactive setup.
 EOF
 }
 
@@ -244,117 +239,29 @@ verify_agent_os() {
   fi
 }
 
-has_provider_config() {
-  [[ -n "${MODEL_ROUTER:-}" ]] && return 0
-  [[ -n "${MODEL_PROVIDER:-}" ]] && return 0
-  [[ -f "${ROUTER_CONFIG_PATH}" ]] && return 0
-  return 1
-}
-
-write_deepseek_router_config() {
-  local api_key="$1"
-  mkdir -p "${AGENT_OS_CONFIG_HOME}"
-  ROUTER_CONFIG_PATH="${ROUTER_CONFIG_PATH}" DEEPSEEK_API_KEY_VALUE="${api_key}" node <<'NODE'
-const fs = require('node:fs');
-const path = process.env.ROUTER_CONFIG_PATH;
-const apiKey = process.env.DEEPSEEK_API_KEY_VALUE;
-const config = {
-  default: 'deepseek/deepseek-v4-flash',
-  providers: {
-    deepseek: {
-      type: 'deepseek',
-      baseUrl: 'https://api.deepseek.com',
-      apiKey,
-      models: ['deepseek-v4-flash', 'deepseek-v4-pro']
-    }
-  }
-};
-fs.writeFileSync(path, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 });
-NODE
-  chmod 600 "${ROUTER_CONFIG_PATH}" 2>/dev/null || true
-  PROVIDER_READY=1
-  log "DeepSeek router config written to: ${ROUTER_CONFIG_PATH}"
-}
-
-configure_provider_if_needed() {
-  if has_provider_config; then
-    PROVIDER_READY=1
-    log "Model provider config detected."
-    return
-  fi
-
-  warn "No model provider is configured yet."
-  warn "Agent-OS needs a model provider before it can answer prompts. DeepSeek is recommended for this installer."
-
-  if [[ -n "${AGENT_OS_PROVIDER_API_KEY:-}" ]]; then
-    write_deepseek_router_config "${AGENT_OS_PROVIDER_API_KEY}"
-    return
-  fi
-
-  if [[ -t 0 ]]; then
-    printf 'Configure DeepSeek now? [y/N] '
-    local answer
-    read -r answer
-    case "${answer}" in
-      y|Y|yes|YES)
-        printf 'DeepSeek API Key: '
-        local api_key
-        read -rs api_key
-        printf '\n'
-        if [[ -n "${api_key}" ]]; then
-          write_deepseek_router_config "${api_key}"
-          return
-        fi
-        warn "Empty API key; skipped provider setup."
-        ;;
-    esac
-  fi
-
-  cat <<EOF
-
-Provider setup was skipped.
-
-Before asking Agent-OS to run prompts, configure a model provider. DeepSeek example:
-  mkdir -p ~/.agent-os
-  nano ~/.agent-os/model-router.json
-
-See:
-  https://github.com/VIONWILLIAMS/agent-os-install#provider-setup
-EOF
-}
-
 log "Starting macOS Agent-OS CLI installer."
 ensure_node
 ensure_bun
 install_agent_os
 verify_agent_os
-configure_provider_if_needed
 
 cat <<EOF
 
 Agent-OS CLI is installed and verified inside this installer.
 
 Next step:
-  Close this Terminal window and open a new Terminal, then run:
+  1. Close this Terminal window and open a new Terminal.
+  2. Run:
+     agent-os
+  3. In Agent-OS, type:
+     /model
+  4. Choose/add DeepSeek and paste your DeepSeek API Key inside Agent-OS.
+
+Useful checks:
+  agent-os --version
   agent-os --help
   aos --help
-  agent-os --version
-EOF
 
-if [[ "${PROVIDER_READY}" == "1" ]]; then
-  cat <<EOF
-  agent-os -p "回复 pong"
-EOF
-else
-  cat <<EOF
-
-Important:
-  Configure a model provider before running plain "agent-os".
-  Otherwise Agent-OS can show help/version but cannot answer prompts.
-EOF
-fi
-
-cat <<EOF
 If you do not want to reopen Terminal, run:
   source ${PROFILE_FILE}
 EOF

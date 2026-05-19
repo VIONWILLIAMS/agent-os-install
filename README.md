@@ -10,8 +10,9 @@
 - 终端 PATH 配置
 - npm 专用缓存目录，避开旧 npm/sudo 造成的 `~/.npm` 权限问题
 - 懒人快捷命令 `aos`
-- DeepSeek Provider 配置引导
 - 安装后的版本验证
+
+DeepSeek 不在安装脚本里配置。正确流程是：先把 Agent-OS CLI 装好，顺利打开 `agent-os`，进入 Agent-OS 界面后再用 `/model` 配置 DeepSeek。
 
 ## 最懒人安装
 
@@ -44,84 +45,68 @@ agent-os --version
 成功时会看到类似：
 
 ```text
-1.0.0-alpha.16 (Agent-OS)
+1.0.0-alpha.17 (Agent-OS)
 ```
 
-### 第 6 步：查看 Agent-OS 命令
+### 第 6 步：打开 Agent-OS
+
+```bash
+agent-os
+```
+
+成功时会进入 Agent-OS 的 CLI 界面。
+
+### 第 7 步：进入模型配置
+
+在 Agent-OS 界面里输入：
+
+```text
+/model
+```
+
+如果首次打开时页面已经自动进入模型配置，就不用再输入 `/model`。
+
+### 第 8 步：配置 DeepSeek
+
+在模型配置界面选择或添加 DeepSeek，然后粘贴你的 DeepSeek API Key。
+
+配置完成后，Agent-OS 才能正常回答问题。
+
+### 第 9 步：测试是否能对话
+
+回到 Agent-OS 对话界面，输入一句简单测试：
+
+```text
+回复 pong
+```
+
+如果能返回 `pong` 或正常回答，说明安装和 DeepSeek 配置都完成了。
+
+## 常用命令
+
+查看版本：
+
+```bash
+agent-os --version
+```
+
+查看帮助：
 
 ```bash
 agent-os --help
 ```
 
-也可以用短命令：
+短命令：
 
 ```bash
 aos --help
 ```
 
-如果能看到命令列表，说明 CLI 已经装好。
+## 关键说明
 
-## 模型配置
-
-Agent-OS CLI 安装成功后，还需要配置一个模型 Provider，推荐使用 DeepSeek。
-
-如果没有配置 Provider，`agent-os --version` 和 `agent-os --help` 可以用，但 `agent-os -p "..."` 这类需要模型回答的命令不能正常工作。
-
-### 推荐：DeepSeek
-
-重新运行最新版安装脚本时，它会提示：
-
-```text
-Configure DeepSeek now? [y/N]
-```
-
-输入 `y`，然后粘贴 DeepSeek API Key。脚本会自动写入：
-
-```text
-~/.agent-os/model-router.json
-```
-
-配置完成后再测试：
-
-```bash
-agent-os -p "回复 pong"
-```
-
-### 手动配置 DeepSeek
-
-如果你想手动配置，执行：
-
-```bash
-mkdir -p ~/.agent-os
-```
-
-然后编辑：
-
-```bash
-nano ~/.agent-os/model-router.json
-```
-
-写入下面内容，并把 `sk-你的key` 换成真实 DeepSeek API Key：
-
-```json
-{
-  "default": "deepseek/deepseek-v4-flash",
-  "providers": {
-    "deepseek": {
-      "type": "deepseek",
-      "baseUrl": "https://api.deepseek.com",
-      "apiKey": "sk-你的key",
-      "models": ["deepseek-v4-flash", "deepseek-v4-pro"]
-    }
-  }
-}
-```
-
-保存后执行：
-
-```bash
-agent-os -p "回复 pong"
-```
+- 安装脚本只负责安装 CLI，不会在终端里询问 DeepSeek API Key。
+- DeepSeek 配置在进入 Agent-OS 后完成，入口是 `/model`。
+- `agent-os --version` 能显示版本，只代表 CLI 安装成功；能不能对话取决于是否已经在 `/model` 里配置模型。
 
 ## 以后升级 Agent-OS
 
