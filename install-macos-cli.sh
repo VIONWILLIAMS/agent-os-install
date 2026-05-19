@@ -5,6 +5,7 @@ PACKAGE_SPEC="${AGENT_OS_PACKAGE_SPEC:-@vionwilliams/agent-os@latest}"
 MIN_NODE_MAJOR="${AGENT_OS_MIN_NODE_MAJOR:-20}"
 MIN_BUN_VERSION="${AGENT_OS_MIN_BUN_VERSION:-1.3.0}"
 NPM_CACHE_DIR="${AGENT_OS_NPM_CACHE:-${HOME}/.agent-os/npm-cache}"
+SHORTCUT_BIN_DIR="${AGENT_OS_SHORTCUT_BIN:-${HOME}/.agent-os/bin}"
 
 log() {
   printf '\033[1;34m[agent-os]\033[0m %s\n' "$*"
@@ -35,6 +36,8 @@ Environment variables:
                           Default: ${MIN_BUN_VERSION}
   AGENT_OS_NPM_CACHE      npm cache directory used by this installer.
                           Default: ${NPM_CACHE_DIR}
+  AGENT_OS_SHORTCUT_BIN   Directory for Agent-OS convenience commands.
+                          Default: ${SHORTCUT_BIN_DIR}
 EOF
 }
 
@@ -203,12 +206,37 @@ install_agent_os() {
   npm install -g "${PACKAGE_SPEC}"
 }
 
+ensure_agent_os_shortcuts() {
+  local agent_path
+  agent_path="$(command -v agent-os || true)"
+  if [[ -z "${agent_path}" ]]; then
+    return
+  fi
+
+  mkdir -p "${SHORTCUT_BIN_DIR}" || fail "Unable to create shortcut directory: ${SHORTCUT_BIN_DIR}"
+  add_to_path_for_now "${SHORTCUT_BIN_DIR}"
+  append_profile_line 'export PATH="$HOME/.agent-os/bin:$PATH"'
+
+  if [[ "${agent_path}" != "${SHORTCUT_BIN_DIR}/agent-os" ]]; then
+    ln -sf "${agent_path}" "${SHORTCUT_BIN_DIR}/agent-os"
+  fi
+  ln -sf "${agent_path}" "${SHORTCUT_BIN_DIR}/aos"
+  log "Convenience commands are ready: agent-os, aos"
+}
+
 verify_agent_os() {
   hash -r 2>/dev/null || true
   command -v agent-os >/dev/null 2>&1 || fail "agent-os is not in PATH after install. Restart Terminal and run: agent-os --version"
+  ensure_agent_os_shortcuts
+  hash -r 2>/dev/null || true
 
   log "Agent-OS installed at: $(command -v agent-os)"
   agent-os --version
+
+  if command -v aos >/dev/null 2>&1; then
+    log "Agent-OS shortcut installed at: $(command -v aos)"
+    aos --version
+  fi
 }
 
 log "Starting macOS Agent-OS CLI installer."
@@ -223,6 +251,7 @@ Agent-OS CLI is installed.
 
 Next commands:
   agent-os --help
+  aos --help
   agent-os -p "回复 pong"
 
 If a new Terminal cannot find agent-os, restart Terminal or run:

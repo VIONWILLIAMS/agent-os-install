@@ -9,6 +9,7 @@
 - `@vionwilliams/agent-os`
 - 终端 PATH 配置
 - npm 专用缓存目录，避开旧 npm/sudo 造成的 `~/.npm` 权限问题
+- 懒人快捷命令 `aos`
 - 安装后的版本验证
 
 ## 最懒人安装
@@ -47,6 +48,12 @@ agent-os --version
 agent-os --help
 ```
 
+也可以用短命令：
+
+```bash
+aos --help
+```
+
 如果能看到命令列表，说明 CLI 已经装好。
 
 ## 以后升级 Agent-OS
@@ -67,6 +74,7 @@ agent-os --version
 - Agent-OS CLI 本体来自 npm 包：`@vionwilliams/agent-os`。
 - 用户不需要 clone Agent-OS 源码仓库。
 - 安装器默认使用 `~/.agent-os/npm-cache` 作为 npm 缓存，不依赖 `~/.npm`。
+- 正式命令是 `agent-os`，安装器会额外创建短命令 `aos`。
 
 ## 常见问题
 
