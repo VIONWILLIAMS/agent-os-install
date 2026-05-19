@@ -31,7 +31,11 @@ curl -fsSL https://raw.githubusercontent.com/VIONWILLIAMS/agent-os-install/main/
 bash install-agent-os-mac.sh
 ```
 
-### 第 4 步：验证安装结果
+### 第 4 步：重启终端
+
+关闭当前终端窗口，重新打开一个新的终端窗口。
+
+### 第 5 步：验证安装结果
 
 ```bash
 agent-os --version
@@ -40,10 +44,10 @@ agent-os --version
 成功时会看到类似：
 
 ```text
-1.0.0-alpha.12 (Agent-OS)
+1.0.0-alpha.16 (Agent-OS)
 ```
 
-### 第 5 步：查看 Agent-OS 命令
+### 第 6 步：查看 Agent-OS 命令
 
 ```bash
 agent-os --help
@@ -57,23 +61,11 @@ aos --help
 
 如果能看到命令列表，说明 CLI 已经装好。
 
-## Provider Setup
+## 模型配置
 
-Agent-OS CLI 安装成功后，还需要配置一个模型 Provider。
+Agent-OS CLI 安装成功后，还需要配置一个模型 Provider，推荐使用 DeepSeek。
 
-如果没有配置 Provider，直接运行：
-
-```bash
-agent-os
-```
-
-可能会默认尝试连接 Anthropic，并出现：
-
-```text
-Unable to connect to Anthropic services
-```
-
-这不是安装失败，而是模型 Provider 没配置。
+如果没有配置 Provider，`agent-os --version` 和 `agent-os --help` 可以用，但 `agent-os -p "..."` 这类需要模型回答的命令不能正常工作。
 
 ### 推荐：DeepSeek
 
@@ -134,7 +126,7 @@ agent-os -p "回复 pong"
 ## 以后升级 Agent-OS
 
 ```bash
-npm install -g @vionwilliams/agent-os@latest
+npm install -g @vionwilliams/agent-os@alpha
 ```
 
 然后验证：
@@ -150,7 +142,7 @@ agent-os --version
 - 用户不需要 clone Agent-OS 源码仓库。
 - 安装器默认使用 `~/.agent-os/npm-cache` 作为 npm 缓存，不依赖 `~/.npm`。
 - 正式命令是 `agent-os`，安装器会额外创建短命令 `aos`。
-- 如果看到 Anthropic 连接错误，优先检查 Provider 配置，不是安装失败。
+- 如果能看到版本号，但无法对话，优先检查 Provider 配置，不是安装失败。
 
 ## 常见问题
 

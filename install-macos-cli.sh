@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PACKAGE_SPEC="${AGENT_OS_PACKAGE_SPEC:-@vionwilliams/agent-os@latest}"
+PACKAGE_SPEC="${AGENT_OS_PACKAGE_SPEC:-@vionwilliams/agent-os@alpha}"
 MIN_NODE_MAJOR="${AGENT_OS_MIN_NODE_MAJOR:-20}"
-MIN_BUN_VERSION="${AGENT_OS_MIN_BUN_VERSION:-1.3.0}"
+MIN_BUN_VERSION="${AGENT_OS_MIN_BUN_VERSION:-1.3.14}"
 NPM_CACHE_DIR="${AGENT_OS_NPM_CACHE:-${HOME}/.agent-os/npm-cache}"
 SHORTCUT_BIN_DIR="${AGENT_OS_SHORTCUT_BIN:-${HOME}/.agent-os/bin}"
 AGENT_OS_CONFIG_HOME="${AGENT_OS_CONFIG_DIR:-${HOME}/.agent-os}"
@@ -247,7 +247,6 @@ verify_agent_os() {
 has_provider_config() {
   [[ -n "${MODEL_ROUTER:-}" ]] && return 0
   [[ -n "${MODEL_PROVIDER:-}" ]] && return 0
-  [[ -n "${ANTHROPIC_API_KEY:-}" ]] && return 0
   [[ -f "${ROUTER_CONFIG_PATH}" ]] && return 0
   return 1
 }
@@ -285,7 +284,7 @@ configure_provider_if_needed() {
   fi
 
   warn "No model provider is configured yet."
-  warn "If you run agent-os now, it may try Anthropic by default and fail in unsupported networks."
+  warn "Agent-OS needs a model provider before it can answer prompts. DeepSeek is recommended for this installer."
 
   if [[ -n "${AGENT_OS_PROVIDER_API_KEY:-}" ]]; then
     write_deepseek_router_config "${AGENT_OS_PROVIDER_API_KEY}"
@@ -315,7 +314,7 @@ configure_provider_if_needed() {
 
 Provider setup was skipped.
 
-Before starting Agent-OS, configure a model provider. DeepSeek example:
+Before asking Agent-OS to run prompts, configure a model provider. DeepSeek example:
   mkdir -p ~/.agent-os
   nano ~/.agent-os/model-router.json
 
@@ -333,9 +332,10 @@ configure_provider_if_needed
 
 cat <<EOF
 
-Agent-OS CLI is installed.
+Agent-OS CLI is installed and verified inside this installer.
 
-Next commands:
+Next step:
+  Close this Terminal window and open a new Terminal, then run:
   agent-os --help
   aos --help
   agent-os --version
@@ -350,11 +350,11 @@ else
 
 Important:
   Configure a model provider before running plain "agent-os".
-  Otherwise Agent-OS may try Anthropic by default.
+  Otherwise Agent-OS can show help/version but cannot answer prompts.
 EOF
 fi
 
 cat <<EOF
-If a new Terminal cannot find agent-os, restart Terminal or run:
+If you do not want to reopen Terminal, run:
   source ${PROFILE_FILE}
 EOF
