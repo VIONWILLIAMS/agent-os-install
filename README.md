@@ -10,6 +10,7 @@
 - 终端 PATH 配置
 - npm 专用缓存目录，避开旧 npm/sudo 造成的 `~/.npm` 权限问题
 - 懒人快捷命令 `aos`
+- DeepSeek Provider 配置引导
 - 安装后的版本验证
 
 ## 最懒人安装
@@ -56,6 +57,80 @@ aos --help
 
 如果能看到命令列表，说明 CLI 已经装好。
 
+## Provider Setup
+
+Agent-OS CLI 安装成功后，还需要配置一个模型 Provider。
+
+如果没有配置 Provider，直接运行：
+
+```bash
+agent-os
+```
+
+可能会默认尝试连接 Anthropic，并出现：
+
+```text
+Unable to connect to Anthropic services
+```
+
+这不是安装失败，而是模型 Provider 没配置。
+
+### 推荐：DeepSeek
+
+重新运行最新版安装脚本时，它会提示：
+
+```text
+Configure DeepSeek now? [y/N]
+```
+
+输入 `y`，然后粘贴 DeepSeek API Key。脚本会自动写入：
+
+```text
+~/.agent-os/model-router.json
+```
+
+配置完成后再测试：
+
+```bash
+agent-os -p "回复 pong"
+```
+
+### 手动配置 DeepSeek
+
+如果你想手动配置，执行：
+
+```bash
+mkdir -p ~/.agent-os
+```
+
+然后编辑：
+
+```bash
+nano ~/.agent-os/model-router.json
+```
+
+写入下面内容，并把 `sk-你的key` 换成真实 DeepSeek API Key：
+
+```json
+{
+  "default": "deepseek/deepseek-v4-flash",
+  "providers": {
+    "deepseek": {
+      "type": "deepseek",
+      "baseUrl": "https://api.deepseek.com",
+      "apiKey": "sk-你的key",
+      "models": ["deepseek-v4-flash", "deepseek-v4-pro"]
+    }
+  }
+}
+```
+
+保存后执行：
+
+```bash
+agent-os -p "回复 pong"
+```
+
 ## 以后升级 Agent-OS
 
 ```bash
@@ -75,6 +150,7 @@ agent-os --version
 - 用户不需要 clone Agent-OS 源码仓库。
 - 安装器默认使用 `~/.agent-os/npm-cache` 作为 npm 缓存，不依赖 `~/.npm`。
 - 正式命令是 `agent-os`，安装器会额外创建短命令 `aos`。
+- 如果看到 Anthropic 连接错误，优先检查 Provider 配置，不是安装失败。
 
 ## 常见问题
 
