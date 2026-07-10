@@ -1,0 +1,56 @@
+name: Mirror native release asset
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Draft public release tag
+        required: true
+        type: string
+      asset_name:
+        description: Canonical Agent-OS release asset name
+        required: true
+        type: string
+      source_url:
+        description: Short-lived GitHub release-assets URL from the private build release
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mirror-${{ inputs.tag }}-${{ inputs.asset_name }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+      ASSET_NAME: ${{ inputs.asset_name }}
+      SOURCE_URL: ${{ inputs.source_url }}
+    steps:
+      - name: Validate release and source boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]
+          [[ "$ASSET_NAME" =~ ^agent-os-release\.json$|^agent-os-v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?-(darwin-(arm64|x64)|linux-(arm64|x64)|windows-x64)\.(tar\.gz|zip)(\.sha256)?$ ]]
+          [[ "$SOURCE_URL" == https://release-assets.githubusercontent.com/* ]]
+          test "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = true
+
+      - name: Mirror asset into draft release
+        shell: bash
+        run: |
+          set -euo pipefail
+          destination="$RUNNER_TEMP/$ASSET_NAME"
+          curl --fail --location --silent --show-error \
+            --retry 5 --retry-all-errors --connect-timeout 20 \
+            --proto '=https' --tlsv1.2 \
+            "$SOURCE_URL" --output "$destination"
+          test -s "$destination"
+          gh release upload "$TAG" "$destination" \
+            --repo "$GITHUB_REPOSITORY" --clobber
